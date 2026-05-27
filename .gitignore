@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter / Gradio
+.ipynb_checkpoints/
+.gradio/
+
+# Documentatie (LaTeX)
+documentatie.tex
+*.pdf
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.synctex.gz

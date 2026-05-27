@@ -5,12 +5,14 @@ def redimensionare(A, l, c):
     m, n = np.shape(A)
     puncte_linii = np.linspace(0, m, l+1).astype(int)
     puncte_coloane = np.linspace(0, n, c+1).astype(int)
-    B = np.zeros((l, c))
-    for i in range(l):
-        for j in range(c):
-            bloc = A[puncte_linii[i]:puncte_linii[i+1], puncte_coloane[j]:puncte_coloane[j+1]]
-            B[i, j] = np.sum(bloc) / ((puncte_linii[i+1] - puncte_linii[i]) * (puncte_coloane[j+1] - puncte_coloane[j]))
-    return B
+    #suma pe linii grupate
+    A_linii = np.add.reduceat(A, puncte_linii[:-1], axis=0)
+    #suma pe coloane grupate
+    A_blocuri = np.add.reduceat(A_linii, puncte_coloane[:-1], axis=1)
+    #dim fiecarui bloc
+    dim_linii = np.diff(puncte_linii).reshape(-1, 1)
+    dim_coloane = np.diff(puncte_coloane).reshape(1, -1)
+    return A_blocuri / (dim_linii * dim_coloane)
 
 def Imagini():   
     lfw_people = fetch_lfw_people(min_faces_per_person=20, color=False, resize=1.0)

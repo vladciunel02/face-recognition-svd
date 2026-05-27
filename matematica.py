@@ -1,22 +1,26 @@
 import numpy as np
 
+
 def Tridiag_Householder(A):
     n = np.shape(A)[0]
     T = np.copy(A)
     Q = np.eye(n)
     for k in range(n - 2):
-        v = np.copy(T[k + 1:, k]).reshape(-1,1)
+        v = np.copy(T[k + 1 :, k]).reshape(-1, 1)
         norma_v = np.linalg.norm(v)
         s = 1 if v[0] >= 0 else -1
         v[0] += s * norma_v
-        Hv = np.eye(n-k-1) - 2 * (v @ v.T) / (v.T @ v)
-        H = np.block([
+        Hv = np.eye(n - k - 1) - 2 * (v @ v.T) / (v.T @ v)
+        H = np.block(
+            [
                 [np.eye(k + 1), np.zeros((k + 1, n - k - 1))],
-                [np.zeros((n - k - 1, k + 1)), Hv]
-            ])
+                [np.zeros((n - k - 1, k + 1)), Hv],
+            ]
+        )
         T = H @ T @ H
         Q = Q @ H
     return Q, T
+
 
 def QR(A):
     m, n = A.shape
@@ -26,7 +30,7 @@ def QR(A):
         v = np.copy(R[k:, k]).reshape(-1, 1)
         norm_v = np.linalg.norm(v)
         if norm_v < 1e-15:
-            continue    
+            continue
         s = 1 if v[0] >= 0 else -1
         v[0] += s * norm_v
         numitor = v.T @ v
@@ -38,13 +42,14 @@ def QR(A):
             Q = Q @ H
     return Q, R
 
+
 def QR_iteration(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
-    T = Q_tri.T @ Mat_L @ Q_tri 
+    T = Q_tri.T @ Mat_L @ Q_tri
     V = Q_tri.copy()
-    for _ in range(max_iter):        
+    for _ in range(max_iter):
         if np.sum(np.abs(T - np.diag(np.diag(T)))) < TOL:
             break
-        Q_k, R_k = QR(T) 
+        Q_k, R_k = QR(T)
         T = R_k @ Q_k
         V = V @ Q_k
 
@@ -56,6 +61,7 @@ def QR_iteration(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
             T[:, [i, idx_maxim]] = T[:, [idx_maxim, i]]
             V[:, [i, idx_maxim]] = V[:, [idx_maxim, i]]
     return T, V
+
 
 def svd(A_mat):
     L_mat = A_mat.T @ A_mat
