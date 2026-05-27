@@ -1,0 +1,73 @@
+import numpy as np
+
+def Tridiag_Householder(A):
+    n = np.shape(A)[0]
+    T = np.copy(A)
+    Q = np.eye(n)
+    for k in range(n - 2):
+        v = np.copy(T[k + 1:, k]).reshape(-1,1)
+        norma_v = np.linalg.norm(v)
+        s = 1 if v[0] >= 0 else -1
+        v[0] += s * norma_v
+        Hv = np.eye(n-k-1) - 2 * (v @ v.T) / (v.T @ v)
+        H = np.block([
+                [np.eye(k + 1), np.zeros((k + 1, n - k - 1))],
+                [np.zeros((n - k - 1, k + 1)), Hv]
+            ])
+        T = H @ T @ H
+        Q = Q @ H
+    return Q, T
+
+def QR(A):
+    m, n = A.shape
+    Q = np.eye(m)
+    R = A.copy().astype(float)
+    for k in range(n):
+        v = np.copy(R[k:, k]).reshape(-1, 1)
+        norm_v = np.linalg.norm(v)
+        if norm_v < 1e-15:
+            continue    
+        s = 1 if v[0] >= 0 else -1
+        v[0] += s * norm_v
+        numitor = v.T @ v
+        if numitor > 1e-15:
+            Hv = np.eye(m - k) - 2 * (v @ v.T) / numitor
+            H = np.eye(m)
+            H[k:, k:] = Hv
+            R = H @ R
+            Q = Q @ H
+    return Q, R
+
+def QR_iteration(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
+    T = Q_tri.T @ Mat_L @ Q_tri 
+    V = Q_tri.copy()
+    for _ in range(max_iter):        
+        if np.sum(np.abs(T - np.diag(np.diag(T)))) < TOL:
+            break
+        Q_k, R_k = QR(T) 
+        T = R_k @ Q_k
+        V = V @ Q_k
+
+    n_local = T.shape[0]
+    for i in range(n_local - 1):
+        idx_maxim = i + np.argmax(np.diag(T)[i:])
+        if idx_maxim != i:
+            T[[i, idx_maxim], :] = T[[idx_maxim, i], :]
+            T[:, [i, idx_maxim]] = T[:, [idx_maxim, i]]
+            V[:, [i, idx_maxim]] = V[:, [idx_maxim, i]]
+    return T, V
+
+def svd(A_mat):
+    L_mat = A_mat.T @ A_mat
+    Q_tri, T_tri = Tridiag_Householder(L_mat)
+    T_final, V = QR_iteration(L_mat, Q_tri)
+    valori_proprii = np.diag(T_final)
+    valori_proprii = np.maximum(valori_proprii, 0)
+    S = np.sqrt(valori_proprii)
+    U_mat = np.zeros((A_mat.shape[0], A_mat.shape[1]))
+    for i in range(A_mat.shape[1]):
+        if S[i] > 1e-10:
+            U_mat[:, i] = (A_mat @ V[:, i]) / S[i]
+        else:
+            U_mat[:, i] = 0
+    return U_mat, S, V.T
