@@ -15,3 +15,5 @@ documentatie.tex
 *.toc
 *.fls
 *.synctex.gz
+
+.vscode/
