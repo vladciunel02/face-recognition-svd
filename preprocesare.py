@@ -14,7 +14,7 @@ def redimensionare(A, l, c):
 def Imagini():   
     lfw_people = fetch_lfw_people(min_faces_per_person=20, color=False, resize=1.0)
     n_samples, h, w = lfw_people.images.shape
-    return lfw_people.images, n_samples, h, w
+    return lfw_people.images, n_samples, h, w, lfw_people.target, lfw_people.target_names
 
 def centrare_date(A):
     fata_medie = np.mean(A, axis=1).reshape(-1, 1)

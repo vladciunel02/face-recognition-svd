@@ -63,8 +63,8 @@ def QR_iteration(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
     return T, V
 
 
-def QR_iteration_Wilkinson(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
-    T = Q_tri.T @ Mat_L @ Q_tri
+def QR_iteration_Wilkinson(T_tri, Q_tri, TOL=1e-2, max_iter=100):
+    T = T_tri.copy()
     V = Q_tri.copy()
     n = T.shape[0]
     
@@ -111,7 +111,7 @@ def QR_iteration_Wilkinson(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
 def svd(A_mat):
     L_mat = A_mat.T @ A_mat
     Q_tri, T_tri = Tridiag_Householder(L_mat)
-    T_final, V = QR_iteration_Wilkinson(L_mat, Q_tri)
+    T_final, V = QR_iteration_Wilkinson(T_tri, Q_tri)
     valori_proprii = np.diag(T_final)
     valori_proprii = np.maximum(valori_proprii, 0)
     S = np.sqrt(valori_proprii)
