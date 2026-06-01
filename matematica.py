@@ -27,19 +27,18 @@ def QR(A):
     Q = np.eye(m)
     R = A.copy().astype(float)
     for k in range(n):
-        v = np.copy(R[k:, k]).reshape(-1, 1)
+        v = np.copy(R[k:, k])
         norm_v = np.linalg.norm(v)
         if norm_v < 1e-15:
             continue
         s = 1 if v[0] >= 0 else -1
         v[0] += s * norm_v
-        numitor = v.T @ v
+        numitor = v @ v
         if numitor > 1e-15:
-            Hv = np.eye(m - k) - 2 * (v @ v.T) / numitor
-            H = np.eye(m)
-            H[k:, k:] = Hv
-            R = H @ R
-            Q = Q @ H
+            # Aplicam reflectorul H = I - 2 v v^T / (v^T v) direct, fara sa-l
+            # formam explicit: R <- H R pe randurile k:, Q <- Q H pe coloanele k:
+            R[k:, :] -= np.outer(v, (2.0 / numitor) * (v @ R[k:, :]))
+            Q[:, k:] -= np.outer((2.0 / numitor) * (Q[:, k:] @ v), v)
     return Q, R
 
 
@@ -63,7 +62,7 @@ def QR_iteration(Mat_L, Q_tri, TOL=1e-2, max_iter=100):
     return T, V
 
 
-def QR_iteration_Wilkinson(T_tri, Q_tri, TOL=1e-2, max_iter=100):
+def QR_iteration_Wilkinson(T_tri, Q_tri, TOL=1e-9, max_iter=1000):
     T = T_tri.copy()
     V = Q_tri.copy()
     n = T.shape[0]
@@ -91,12 +90,11 @@ def QR_iteration_Wilkinson(T_tri, Q_tri, TOL=1e-2, max_iter=100):
             numitor = abs(delta) + np.sqrt(delta**2 + bn_minus_1**2)
             mu = an - (sgn * (bn_minus_1**2)) / numitor
 
-        I = np.eye(n)
-        T_shifted = T - mu * I
-        
-        Q_k, R_k = QR(T_shifted)
-        T = R_k @ Q_k + mu * I
-        V = V @ Q_k
+        # Lucram doar pe blocul activ k x k (restul a deflatat deja)
+        I = np.eye(k)
+        Q_k, R_k = QR(T[:k, :k] - mu * I)
+        T[:k, :k] = R_k @ Q_k + mu * I
+        V[:, :k] = V[:, :k] @ Q_k
 
     n_local = T.shape[0]
     for i in range(n_local - 1):
